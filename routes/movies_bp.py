@@ -1,6 +1,10 @@
 
 from flask import Blueprint
 
+# SCREAMING_SNAKE_CASE or CONSTANT_CASE
+HTTP_NOT_FOUND = 404
+
+
 movies = [
     {
         "name": "Thor: Ragnarok",
@@ -97,7 +101,7 @@ movies_bp = Blueprint("movies_bp", __name__)
 # Task
 # /api/movies - JSON
 
-@movies_bp.route("/api/movies")
+@movies_bp.route("/")
 def movies_data():
     return movies
 
@@ -107,24 +111,24 @@ def movies_data():
 
 # read movies and movie_id using api 
 
-@movies_bp.get("/api/movies/<id>")
+@movies_bp.get("<id>")
 def get_movie_by_id(id):
     for movie in movies:
         if movie["id"] == id:
             return (movie)
-    return {"message": "Movie not found"}, 404
+    return {"message": "Movie not found"}, HTTP_NOT_FOUND
 
 
 # delete api creation for movies
         
 
-@movies_bp.delete("/api/movies/<id>")
+@movies_bp.delete("<id>")
 def del_movie_vy_id(id):
     for movie in movies:
         if movie["id"] == id:
             movies.remove(movie)
             return {"message": "Movie deleted successfully"}
-    return {"message": "Movie not found"}, 404
+    return {"message": "Movie not found"}, HTTP_NOT_FOUND
 
 
 

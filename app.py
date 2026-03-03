@@ -11,6 +11,6 @@ def hello():
 
 
 
-app.register_blueprint(movies_bp)
+app.register_blueprint(movies_bp,url_prefix="/api/movies")
 
 
