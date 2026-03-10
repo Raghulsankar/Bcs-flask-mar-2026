@@ -1,8 +1,14 @@
 
 from flask import Blueprint
+from flask_jwt_extended import jwt_required
+from models.movie import Movie
+from extensions import db
+from sqlalchemy import select
+
 
 # SCREAMING_SNAKE_CASE or CONSTANT_CASE
 HTTP_NOT_FOUND = 404
+HTTP_SERVER_ERROR = 500
 
 
 movies = [
@@ -101,34 +107,72 @@ movies_bp = Blueprint("movies_bp", __name__)
 # Task
 # /api/movies - JSON
 
-@movies_bp.route("/")
-def movies_data():
-    return movies
+# @movies_bp.route("/")
+# def movies_data():
+#     return movies
+@movies_bp.get("")
+@jwt_required()
+def get_all_movies():
+    #  Select * from movies - Black Box - Learning
+    data = db.session.execute(select(Movie)).scalars().all()
 
+    all_movies = []
+    for movie in data:
+        all_movies.append(movie.to_dict())
+
+    return all_movies
 
 
 # usng inside of route added method like get,put,delete,post
 
 # read movies and movie_id using api 
 
-@movies_bp.get("<id>")
+# @movies_bp.get("<id>")
+# @jwt_required()
+# def get_movie_by_id(id):
+#     for movie in movies:
+#         if movie["id"] == id:
+#             return (movie)
+#     return {"message": "Movie not found"}, HTTP_NOT_FOUND
+
+@movies_bp.get("/<id>")  # API Endpoint
+@jwt_required()
 def get_movie_by_id(id):
-    for movie in movies:
-        if movie["id"] == id:
-            return (movie)
-    return {"message": "Movie not found"}, HTTP_NOT_FOUND
+    # Select * from movies where id = 100
+    data = db.session.get(Movie, id)
+
+    if not data:
+        return {"message": "movie not found"}, HTTP_NOT_FOUND
+
+    return data.to_dict()
 
 
 # delete api creation for movies
         
 
-@movies_bp.delete("<id>")
-def del_movie_vy_id(id):
-    for movie in movies:
-        if movie["id"] == id:
-            movies.remove(movie)
-            return {"message": "Movie deleted successfully"}
-    return {"message": "Movie not found"}, HTTP_NOT_FOUND
+# @movies_bp.delete("<id>")
+# def del_movie_vy_id(id):
+#     for movie in movies:
+#         if movie["id"] == id:
+#             movies.remove(movie)
+#             return {"message": "Movie deleted successfully"}
+#     return {"message": "Movie not found"}, HTTP_NOT_FOUND
 
+@movies_bp.delete("/<id>")
+@jwt_required()
+def delete_movie_by_id(id):
+    movie = db.session.get(Movie, id)
+
+    if not movie:
+        return {"message": "movie not found"}, HTTP_NOT_FOUND
+
+    try:
+        db.session.delete(movie)  # temp
+        db.session.commit()  # permanent
+    except Exception as err:
+        db.session.rollback()  # Undo
+        return {"message": str(err)}, HTTP_SERVER_ERROR
+
+    return {"data": movie.to_dict(), "message": "movie delete successfully"}
 
 
